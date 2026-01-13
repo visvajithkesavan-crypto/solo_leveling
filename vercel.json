@@ -1,11 +1,4 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "apps/web/package.json",
-      "use": "@vercel/next"
-    }
-  ],
   "installCommand": "pnpm install && pnpm --filter @solo-leveling/shared build",
   "buildCommand": "pnpm --filter @solo-leveling/web build",
   "outputDirectory": "apps/web/.next",
