@@ -1,0 +1,9 @@
+packages:
+  - apps/*
+  - packages/*
+  - infra/*
+
+ignoredBuiltDependencies:
+  - '@nestjs/core'
+  - supabase
+  - unrs-resolver

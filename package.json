@@ -1,0 +1,28 @@
+{
+  "name": "solo-leveling-system",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "pnpm run --parallel dev",
+    "build": "pnpm run --recursive build",
+    "api:dev": "pnpm --filter @solo-leveling/api dev",
+    "web:dev": "pnpm --filter @solo-leveling/web dev",
+    "shared:build": "pnpm --filter @solo-leveling/shared build",
+    "supabase:start": "cd infra/supabase && supabase start",
+    "supabase:stop": "cd infra/supabase && supabase stop",
+    "supabase:status": "cd infra/supabase && supabase status",
+    "supabase:migrate": "cd infra/supabase && supabase db reset"
+  },
+  "devDependencies": {
+    "pg": "^8.16.3",
+    "supabase": "^1.226.4"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

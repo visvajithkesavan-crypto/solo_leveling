@@ -1,0 +1,40 @@
+# Monorepo root gitignore
+node_modules/
+dist/
+.next/
+.env
+.env.local
+.env*.local
+apps/api/.env
+apps/web/.env.local
+
+# Build outputs
+*.log
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+
+# Supabase
+infra/supabase/.branches
+infra/supabase/.temp
+
+# Temp migration scripts
+run-migrations.js
+apply-migrations.js
+check-migrations.js
+apply-sql.js
+run-db-migrations.js
+verify-tables.js
+check-goals-table.js
