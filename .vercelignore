@@ -1,0 +1,15 @@
+# Ignore backend API (deploy separately)
+apps/api
+
+# Ignore Android app
+apps/android
+
+# Ignore infra files
+infra
+
+# Ignore local scripts
+*.bat
+run-*.js
+check-*.js
+apply-*.js
+verify-*.js

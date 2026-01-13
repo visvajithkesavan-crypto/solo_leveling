@@ -1,12 +1,13 @@
 {
-  "buildCommand": "pnpm --filter @solo-leveling/shared build && pnpm --filter @solo-leveling/web build",
-  "outputDirectory": "apps/web/.next",
-  "installCommand": "pnpm install",
-  "framework": "nextjs",
-  "rewrites": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/api/:path*",
-      "destination": "/api/:path*"
+      "src": "apps/web/package.json",
+      "use": "@vercel/next"
     }
-  ]
+  ],
+  "installCommand": "pnpm install && pnpm --filter @solo-leveling/shared build",
+  "buildCommand": "pnpm --filter @solo-leveling/web build",
+  "outputDirectory": "apps/web/.next",
+  "framework": "nextjs"
 }
