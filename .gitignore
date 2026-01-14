@@ -38,3 +38,5 @@ apply-sql.js
 run-db-migrations.js
 verify-tables.js
 check-goals-table.js
+
+ngrok.exe

@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
+import UI_TEXT from '@/lib/uiText';
 
 interface SystemWindowProps {
   title: string;
@@ -81,7 +82,7 @@ export function QuestCard({ title, description, difficulty, createdAt, onDelete 
         <h3 className="text-lg font-bold text-system-gold">{title}</h3>
         {difficulty && (
           <span className="text-xs px-2 py-1 bg-system-border rounded font-system">
-            {difficulty}
+            {difficulty.toUpperCase()}
           </span>
         )}
       </div>
@@ -91,13 +92,13 @@ export function QuestCard({ title, description, difficulty, createdAt, onDelete 
       )}
       
       <div className="flex justify-between items-center text-xs opacity-50">
-        <span>Created: {new Date(createdAt).toLocaleDateString()}</span>
+        <span>Registered: {new Date(createdAt).toLocaleDateString()}</span>
         {onDelete && (
           <button
             onClick={onDelete}
-            className="text-red-400 hover:text-red-300 transition-colors"
+            className="text-red-400 hover:text-red-300 transition-colors uppercase tracking-wider"
           >
-            Delete
+            {UI_TEXT.buttons.deleteQuest}
           </button>
         )}
       </div>

@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
+import { useSystemMessage } from '@/hooks/useSystemMessage';
+import UI_TEXT from '@/lib/uiText';
 import Link from 'next/link';
 
 export default function SignUp() {
@@ -13,6 +15,7 @@ export default function SignUp() {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
+  const { showMessage } = useSystemMessage();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -21,13 +24,13 @@ export default function SignUp() {
     setLoading(true);
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError('Access codes do not match. Re-enter.');
       setLoading(false);
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError('Access code must be at least 6 characters.');
       setLoading(false);
       return;
     }
@@ -35,10 +38,12 @@ export default function SignUp() {
     try {
       await signUp(email, password);
       setSuccess(true);
+      showMessage('welcomeNewUser');
       // Auto-redirect after successful signup
-      setTimeout(() => router.push('/dashboard'), 2000);
+      setTimeout(() => router.push('/dashboard'), 3000);
     } catch (err: any) {
-      setError(err.message || 'Failed to create account. Please try again.');
+      setError(err.message || UI_TEXT.errors.registrationFailed);
+      showMessage('systemError');
     } finally {
       setLoading(false);
     }
@@ -47,12 +52,12 @@ export default function SignUp() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="system-window p-8 max-w-md w-full">
-        <h1 className="system-title text-center mb-8">HUNTER REGISTRATION</h1>
+        <h1 className="system-title text-center mb-8">◈ {UI_TEXT.pages.signup} ◈</h1>
 
         {success ? (
           <div className="bg-green-900/50 border border-green-500 text-green-200 px-4 py-3 rounded text-center">
-            <p className="font-bold mb-2">Registration Successful!</p>
-            <p className="text-sm">Welcome to the System. Redirecting...</p>
+            <p className="font-bold mb-2">HUNTER REGISTRATION COMPLETE</p>
+            <p className="text-sm">The System has acknowledged you. Initializing...</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -64,13 +69,14 @@ export default function SignUp() {
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium mb-2">
-                Email
+                {UI_TEXT.forms.email.label}
               </label>
               <input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                placeholder={UI_TEXT.forms.email.placeholder}
                 required
                 className="w-full px-4 py-2 bg-system-bg border border-system-border rounded focus:outline-none focus:border-system-gold"
               />
@@ -78,13 +84,14 @@ export default function SignUp() {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium mb-2">
-                Password
+                {UI_TEXT.forms.password.label}
               </label>
               <input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder={UI_TEXT.forms.password.placeholder}
                 required
                 minLength={6}
                 className="w-full px-4 py-2 bg-system-bg border border-system-border rounded focus:outline-none focus:border-system-gold"
@@ -93,13 +100,14 @@ export default function SignUp() {
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">
-                Confirm Password
+                {UI_TEXT.forms.confirmPassword.label}
               </label>
               <input
                 id="confirmPassword"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder={UI_TEXT.forms.confirmPassword.placeholder}
                 required
                 className="w-full px-4 py-2 bg-system-bg border border-system-border rounded focus:outline-none focus:border-system-gold"
               />
@@ -110,15 +118,15 @@ export default function SignUp() {
               disabled={loading}
               className="w-full btn-system disabled:opacity-50"
             >
-              {loading ? 'Creating Account...' : 'Join the System'}
+              {loading ? 'PROCESSING...' : UI_TEXT.buttons.signUp}
             </button>
           </form>
         )}
 
         <p className="text-center mt-6 text-sm">
-          Already a Hunter?{' '}
+          Existing Hunter?{' '}
           <Link href="/auth/signin" className="text-system-gold hover:underline">
-            Sign In
+            {UI_TEXT.buttons.signIn}
           </Link>
         </p>
       </div>

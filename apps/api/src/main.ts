@@ -9,9 +9,20 @@ dotenv.config();
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
-  // Enable CORS for Next.js frontend
+  // Enable CORS for Next.js frontend (localhost and ngrok tunnels)
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        process.env.FRONTEND_URL || 'http://localhost:3000',
+        'http://localhost:3000',
+      ];
+      // Allow ngrok domains
+      if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.ngrok-free.app') || origin.endsWith('.ngrok.io')) {
+        callback(null, true);
+      } else {
+        callback(null, true); // Allow all origins for development/demo purposes
+      }
+    },
     credentials: true,
   });
 

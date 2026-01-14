@@ -7,6 +7,8 @@ import { apiClient } from '@/lib/api-client';
 import { SystemWindow, QuestCard, StatusBar } from '@/components/SystemUI';
 import { PopupQueue } from '@/components/PopupSystem';
 import { ManualStepsForm } from '@/components/ManualStepsForm';
+import { useSystemMessage } from '@/hooks/useSystemMessage';
+import UI_TEXT from '@/lib/uiText';
 import { 
   Goal, 
   CreateGoalDto, 
@@ -17,6 +19,7 @@ import {
 export default function Dashboard() {
   const { session, signOut, loading: authLoading } = useAuth();
   const router = useRouter();
+  const { showMessage, showCustomMessage } = useSystemMessage();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [statusWindow, setStatusWindow] = useState<StatusWindowData | null>(null);
   const [popupEvents, setPopupEvents] = useState<PopupEvent[]>([]);
@@ -26,6 +29,7 @@ export default function Dashboard() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newGoal, setNewGoal] = useState<CreateGoalDto>({ title: '' });
   const [error, setError] = useState('');
+  const [previousLevel, setPreviousLevel] = useState<number | null>(null);
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -55,6 +59,13 @@ export default function Dashboard() {
   const loadStatusWindow = async () => {
     try {
       const data = await apiClient.getStatusWindow();
+      
+      // Check for level up
+      if (previousLevel !== null && data.level > previousLevel) {
+        showMessage('levelUp');
+      }
+      setPreviousLevel(data.level);
+      
       setStatusWindow(data);
     } catch (err: any) {
       // If no level state exists yet, use defaults
@@ -76,6 +87,11 @@ export default function Dashboard() {
       const today = new Date().toISOString().split('T')[0];
       const result = await apiClient.evaluateDay(today);
       
+      // Check for level up before updating status
+      if (statusWindow && result.statusWindow.level > statusWindow.level) {
+        showMessage('levelUp');
+      }
+      
       // Update status window
       setStatusWindow(result.statusWindow);
       
@@ -83,8 +99,12 @@ export default function Dashboard() {
       if (result.popupEvents.length > 0) {
         setPopupEvents(result.popupEvents);
       }
+      
+      // Show weekly review message
+      showMessage('weeklyReview');
     } catch (err: any) {
       setError(err.message || 'Failed to evaluate day');
+      showMessage('systemError');
     } finally {
       setEvaluating(false);
     }
@@ -107,21 +127,35 @@ export default function Dashboard() {
       setGoals([created, ...goals]);
       setNewGoal({ title: '' });
       setShowCreateForm(false);
+      
+      // Show System message for quest creation
+      showMessage('questCreated');
     } catch (err: any) {
       setError(err.message || 'Failed to create goal');
+      showMessage('systemError');
     } finally {
       setCreating(false);
     }
   };
 
   const handleDeleteGoal = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this quest?')) return;
+    // Show System-style confirmation
+    showCustomMessage(
+      'warning',
+      UI_TEXT.confirmations.deleteQuest.title,
+      UI_TEXT.confirmations.deleteQuest.message,
+      { urgent: true, autoCloseDelay: null }
+    );
+    
+    if (!confirm('Confirm termination of this quest?')) return;
 
     try {
       await apiClient.deleteGoal(id);
       setGoals(goals.filter((g) => g.id !== id));
+      showMessage('questDeleted');
     } catch (err: any) {
       setError(err.message || 'Failed to delete goal');
+      showMessage('systemError');
     }
   };
 
@@ -149,43 +183,43 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex justify-between items-center">
-            <h1 className="system-title text-3xl">SOLO LEVELING SYSTEM</h1>
+            <h1 className="system-title text-3xl">◈ HUNTER COMMAND CENTER ◈</h1>
             <button
               onClick={() => signOut()}
               className="btn-system bg-red-600 hover:bg-red-700 text-sm px-4 py-2"
             >
-              Sign Out
+              {UI_TEXT.buttons.signOut}
             </button>
           </div>
 
           {/* Status Window */}
-          <SystemWindow title="STATUS WINDOW" className="max-w-md">
+          <SystemWindow title="◇ STATUS WINDOW ◇" className="max-w-md">
             <div className="space-y-4">
               <div className="text-center pb-4 border-b border-system-border">
-                <p className="text-sm opacity-75">Hunter</p>
+                <p className="text-sm opacity-75">HUNTER DESIGNATION</p>
                 <p className="text-xl font-bold text-system-gold">{session.user.email}</p>
               </div>
               
               {statusWindow && (
                 <>
                   <StatusBar 
-                    label="Level" 
+                    label={UI_TEXT.stats.level}
                     value={statusWindow.level} 
                     color="gold" 
                   />
                   <StatusBar 
-                    label="XP" 
+                    label={UI_TEXT.stats.experience}
                     value={statusWindow.xp} 
                     maxValue={statusWindow.xpToNext}
                     color="mana" 
                   />
                   <StatusBar 
-                    label="Active Quests" 
+                    label="ACTIVE OBJECTIVES" 
                     value={goals.length} 
                     color="border" 
                   />
                   <div className="flex justify-between text-sm pt-2 border-t border-system-border">
-                    <span>Daily Streak</span>
+                    <span>{UI_TEXT.stats.currentStreak}</span>
                     <span className="text-system-gold font-bold">
                       {statusWindow.streak} 🔥 (Best: {statusWindow.bestStreak})
                     </span>
@@ -214,7 +248,7 @@ export default function Dashboard() {
           </div>
 
           {/* Quest Board */}
-          <SystemWindow title="QUEST BOARD">
+          <SystemWindow title="◇ QUEST LOG ◇">
           {error && (
             <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded mb-4">
               {error}
@@ -227,7 +261,7 @@ export default function Dashboard() {
               onClick={() => setShowCreateForm(true)}
               className="btn-system mb-6 w-full md:w-auto"
             >
-              + New Quest
+              ◆ {UI_TEXT.buttons.newQuest}
             </button>
           )}
 
@@ -236,14 +270,14 @@ export default function Dashboard() {
             <form onSubmit={handleCreateGoal} className="mb-6 space-y-4 p-4 bg-system-bg border border-system-border rounded">
               <div>
                 <label htmlFor="title" className="block text-sm font-medium mb-2">
-                  Quest Title *
+                  {UI_TEXT.forms.questTitle.label} *
                 </label>
                 <input
                   id="title"
                   type="text"
                   value={newGoal.title}
                   onChange={(e) => setNewGoal({ ...newGoal, title: e.target.value })}
-                  placeholder="Enter your goal..."
+                  placeholder={UI_TEXT.forms.questTitle.placeholder}
                   required
                   className="w-full px-4 py-2 bg-system-panel border border-system-border rounded focus:outline-none focus:border-system-gold"
                 />
@@ -251,13 +285,13 @@ export default function Dashboard() {
 
               <div>
                 <label htmlFor="description" className="block text-sm font-medium mb-2">
-                  Description (Optional)
+                  {UI_TEXT.forms.questDescription.label}
                 </label>
                 <textarea
                   id="description"
                   value={newGoal.description || ''}
                   onChange={(e) => setNewGoal({ ...newGoal, description: e.target.value })}
-                  placeholder="Describe your quest..."
+                  placeholder={UI_TEXT.forms.questDescription.placeholder}
                   rows={3}
                   className="w-full px-4 py-2 bg-system-panel border border-system-border rounded focus:outline-none focus:border-system-gold"
                 />
@@ -269,7 +303,7 @@ export default function Dashboard() {
                   disabled={creating || !newGoal.title.trim()}
                   className="btn-system disabled:opacity-50"
                 >
-                  {creating ? 'Creating...' : 'Create Quest'}
+                  {creating ? 'PROCESSING...' : UI_TEXT.buttons.createQuest}
                 </button>
                 <button
                   type="button"
@@ -279,7 +313,7 @@ export default function Dashboard() {
                   }}
                   className="btn-system bg-gray-600 hover:bg-gray-700"
                 >
-                  Cancel
+                  {UI_TEXT.buttons.cancel}
                 </button>
               </div>
             </form>
@@ -288,8 +322,8 @@ export default function Dashboard() {
           {/* Goals List */}
           {goals.length === 0 ? (
             <div className="text-center py-12 opacity-50">
-              <p className="text-lg">No active quests</p>
-              <p className="text-sm mt-2">Create your first quest to begin your journey</p>
+              <p className="text-lg">{UI_TEXT.emptyStates.noQuests.title}</p>
+              <p className="text-sm mt-2">{UI_TEXT.emptyStates.noQuests.message}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
