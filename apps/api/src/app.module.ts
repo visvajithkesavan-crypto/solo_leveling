@@ -5,6 +5,7 @@ import { SupabaseModule } from './supabase/supabase.module';
 import { EngineModule } from './engine/engine.module';
 import { ProgressModule } from './progress/progress.module';
 import { IngestModule } from './ingest/ingest.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { IngestModule } from './ingest/ingest.module';
     EngineModule,
     ProgressModule,
     IngestModule,
+    AiModule,
   ],
 })
 export class AppModule {}

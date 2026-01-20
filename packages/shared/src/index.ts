@@ -33,8 +33,11 @@ export interface Goal {
   description?: string;
   status?: QuestStatus;
   difficulty?: QuestDifficulty;
+  xp_reward?: number;
+  progress?: number;
+  target?: number;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
 }
 
 /**
@@ -301,3 +304,8 @@ export function applyXp(
   
   return { level, xp, levelsGained };
 }
+
+// Export new gamification systems
+export * from './types/job-class';
+export * from './types/achievements';
+export * from './types/shadow-soldiers';

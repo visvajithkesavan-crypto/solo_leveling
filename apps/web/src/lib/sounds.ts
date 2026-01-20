@@ -5,7 +5,7 @@
  * No external files required - all sounds are procedurally generated.
  */
 
-export type SoundType = 'notification' | 'complete' | 'levelup' | 'warning' | 'failure';
+export type SoundType = 'notification' | 'complete' | 'levelup' | 'warning' | 'failure' | 'praise';
 
 // Storage keys for preferences
 const MUTE_STORAGE_KEY = 'solo-leveling-sound-muted';
@@ -219,6 +219,10 @@ export function playSound(soundType: SoundType, volume?: number): Promise<void> 
           break;
         case 'failure':
           playFailure(ctx, finalVolume);
+          break;
+        case 'praise':
+          // Praise sound - similar to level up but more triumphant
+          playLevelUp(ctx, finalVolume);
           break;
       }
       resolve();

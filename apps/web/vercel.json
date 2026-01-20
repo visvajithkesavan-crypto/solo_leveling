@@ -1,0 +1,31 @@
+# Vercel Deployment Configuration for Solo Leveling Web App
+
+# Build settings
+buildCommand: pnpm --filter @solo-leveling/shared build && pnpm --filter @solo-leveling/web build
+outputDirectory: apps/web/.next
+installCommand: pnpm install
+
+# Framework preset
+framework: nextjs
+
+# Environment variables (set these in Vercel dashboard)
+# NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+# NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+# NEXT_PUBLIC_API_URL=https://your-api.railway.app/api
+
+# Headers for security
+headers:
+  - source: "/(.*)"
+    headers:
+      - key: X-Frame-Options
+        value: DENY
+      - key: X-Content-Type-Options
+        value: nosniff
+      - key: Referrer-Policy
+        value: strict-origin-when-cross-origin
+
+# Redirects
+redirects:
+  - source: /app
+    destination: /dashboard
+    permanent: false

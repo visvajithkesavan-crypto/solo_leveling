@@ -5,6 +5,7 @@ import '@/styles/system.css';
 import { AuthProvider } from '@/lib/auth-context';
 import { SystemMessageProvider } from '@/hooks/useSystemMessage';
 import SystemMessageDisplay from '@/components/SystemMessageDisplay';
+import { FloatingXPProvider } from '@/components/FloatingXP';
 
 const inter = Inter({ subsets: ['latin'] });
 const rajdhani = Rajdhani({ 
@@ -28,8 +29,10 @@ export default function RootLayout({
       <body className={`${inter.className} ${rajdhani.variable} bg-system-bg text-system-text min-h-screen`}>
         <AuthProvider>
           <SystemMessageProvider>
-            {children}
-            <SystemMessageDisplay />
+            <FloatingXPProvider>
+              {children}
+              <SystemMessageDisplay />
+            </FloatingXPProvider>
           </SystemMessageProvider>
         </AuthProvider>
       </body>
