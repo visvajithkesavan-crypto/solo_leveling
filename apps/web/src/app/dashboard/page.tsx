@@ -16,6 +16,13 @@ import { AchievementsPanel } from '@/components/AchievementsPanel';
 import { ShadowArmyPanel } from '@/components/ShadowArmyPanel';
 import { useSystemMessage } from '@/hooks/useSystemMessage';
 import UI_TEXT from '@/lib/uiText';
+// AI Coach Components
+import { useAICoach } from '@/hooks/useAICoach';
+import { GoalSettingModal } from '@/components/GoalSettingModalV2';
+import { MasterPlanViewer } from '@/components/MasterPlanViewer';
+import { AIQuestBoard } from '@/components/AIQuestBoard';
+import { WeeklyReviewModal } from '@/components/WeeklyReviewModal';
+import { ProgressTowardGoalWidget } from '@/components/ProgressTowardGoalWidget';
 import { 
   Goal, 
   CreateGoalDto, 
@@ -27,7 +34,7 @@ import {
 } from '@solo-leveling/shared';
 
 // Dashboard tab type
-type DashboardTab = 'quests' | 'achievements' | 'shadows';
+type DashboardTab = 'quests' | 'ai-coach' | 'achievements' | 'shadows';
 
 export default function Dashboard() {
   const { session, signOut, loading: authLoading } = useAuth();
@@ -66,6 +73,12 @@ export default function Dashboard() {
   
   // Shadow Army State (simulated for now - would come from API)
   const [userShadows, setUserShadows] = useState<UserShadow[]>([]);
+
+  // AI Coach State
+  const aiCoach = useAICoach();
+  const [showGoalModal, setShowGoalModal] = useState(false);
+  const [showMasterPlan, setShowMasterPlan] = useState(false);
+  const [showWeeklyReview, setShowWeeklyReview] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -251,6 +264,20 @@ export default function Dashboard() {
       ...s,
       isActive: s.shadowId === shadowId ? !s.isActive : s.isActive,
     })));
+  };
+
+  // AI Coach Handlers
+  const handleSetGoal = async (goalText: string, timelineMonths: number) => {
+    const result = await aiCoach.setGoal(goalText, timelineMonths);
+    setShowGoalModal(false);
+    return result;
+  };
+
+  const handleCompleteAIQuest = async (questId: string, actualValue?: number) => {
+    const result = await aiCoach.completeQuest(questId, actualValue);
+    // Refresh status window for level up check
+    loadStatusWindow();
+    return result;
   };
 
   // Calculate user stats for achievements/shadows
@@ -442,6 +469,17 @@ export default function Dashboard() {
                   ◇ QUEST LOG
                 </button>
                 <button
+                  onClick={() => setActiveTab('ai-coach')}
+                  className={`px-4 py-2 font-rajdhani font-bold rounded-t-lg transition-all
+                    ${activeTab === 'ai-coach' 
+                      ? 'bg-purple-900/50 border-b-2 border-purple-400 text-purple-400' 
+                      : 'text-slate-500 hover:text-white'
+                    }
+                  `}
+                >
+                  🤖 AI COACH
+                </button>
+                <button
                   onClick={() => setActiveTab('achievements')}
                   className={`px-4 py-2 font-rajdhani font-bold rounded-t-lg transition-all
                     ${activeTab === 'achievements' 
@@ -578,6 +616,67 @@ export default function Dashboard() {
                 />
               )}
 
+              {/* AI Coach Tab Content */}
+              {activeTab === 'ai-coach' && (
+                <div className="space-y-6">
+                  {/* Progress Widget */}
+                  <ProgressTowardGoalWidget
+                    goal={aiCoach.masterGoal}
+                    plan={aiCoach.masterPlan}
+                    progress={aiCoach.goalProgress}
+                    milestonesCompleted={aiCoach.milestones.filter(m => m.completedAt).length}
+                    totalMilestones={aiCoach.milestones.length}
+                    onViewDetails={() => setShowMasterPlan(true)}
+                    onSetGoal={() => setShowGoalModal(true)}
+                  />
+
+                  {/* AI Quest Board */}
+                  <AIQuestBoard
+                    quests={aiCoach.dailyQuests}
+                    goalProgress={aiCoach.goalProgress}
+                    canRegenerate={aiCoach.canRegenerate}
+                    regenerationsRemaining={aiCoach.regenerationsRemaining}
+                    isRegenerating={aiCoach.isRegenerating}
+                    onCompleteQuest={handleCompleteAIQuest}
+                    onRegenerateQuests={aiCoach.regenerateQuests}
+                    onViewMasterPlan={() => setShowMasterPlan(true)}
+                    hasActiveGoal={!!aiCoach.masterGoal}
+                    onSetGoal={() => setShowGoalModal(true)}
+                  />
+
+                  {/* Weekly Review Button */}
+                  {aiCoach.weeklyReview && (
+                    <div className="bg-gradient-to-br from-purple-900/30 to-slate-900/90 border border-purple-500/40 rounded-xl p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-purple-400 font-rajdhani font-bold">Weekly Review Available</h3>
+                          <p className="text-sm text-slate-400">Week {aiCoach.weeklyReview.weekNumber} analysis ready</p>
+                        </div>
+                        <button
+                          onClick={() => setShowWeeklyReview(true)}
+                          className="px-4 py-2 bg-purple-900/50 border border-purple-500/50 text-purple-300 font-rajdhani font-semibold rounded hover:bg-purple-800/50 transition-all"
+                        >
+                          View Review
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* AI Coach Status */}
+                  {aiCoach.isLoading && (
+                    <div className="text-center py-4 text-purple-400 animate-pulse">
+                      <span className="font-rajdhani">◇ Loading AI Coach data... ◇</span>
+                    </div>
+                  )}
+
+                  {aiCoach.error && (
+                    <div className="bg-red-900/30 border border-red-500/40 rounded-lg p-4 text-red-400">
+                      {aiCoach.error}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Shadow Army Tab Content */}
               {activeTab === 'shadows' && (
                 <ShadowArmyPanel
@@ -590,6 +689,48 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* AI Coach Modals */}
+      <GoalSettingModal
+        isOpen={showGoalModal}
+        onClose={() => setShowGoalModal(false)}
+        onGoalSet={() => {
+          setShowGoalModal(false);
+          aiCoach.refreshStatus();
+        }}
+        setGoal={aiCoach.setGoal}
+        isLoading={aiCoach.isLoading}
+      />
+
+      {showMasterPlan && aiCoach.masterPlan && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div 
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            onClick={() => setShowMasterPlan(false)}
+          />
+          <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto m-4">
+            <button
+              onClick={() => setShowMasterPlan(false)}
+              className="absolute top-4 right-4 z-10 text-slate-400 hover:text-white bg-slate-800/80 rounded-full p-2"
+            >
+              ✕
+            </button>
+            <MasterPlanViewer
+              plan={aiCoach.masterPlan}
+              progress={aiCoach.goalProgress}
+              goalText={aiCoach.masterGoal?.goalText || ''}
+            />
+          </div>
+        </div>
+      )}
+
+      <WeeklyReviewModal
+        isOpen={showWeeklyReview}
+        onClose={() => setShowWeeklyReview(false)}
+        review={aiCoach.weeklyReview}
+        onRequestReview={aiCoach.triggerWeeklyReview}
+        isLoading={aiCoach.isLoading}
+      />
     </>
   );
 }

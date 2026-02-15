@@ -1,0 +1,89 @@
+# Solo Leveling System - Local Development Stack
+# Works with both Docker and Podman
+#
+# Usage:
+#   podman-compose up -d    (or docker-compose up -d)
+#
+# This provides:
+#   - PostgreSQL database (free, local)
+#   - Ollama AI server (free, local)
+
+version: '3.8'
+
+services:
+  # ============================================================================
+  # PostgreSQL Database
+  # ============================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: solo_leveling_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: solo_leveling
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-localdevpassword}
+      POSTGRES_DB: solo_leveling
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Auto-run migrations on first start
+      - ./infra/supabase/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U solo_leveling"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - solo_leveling_network
+
+  # ============================================================================
+  # Ollama AI Server (Optional - can also run natively)
+  # ============================================================================
+  # Uncomment this section to run Ollama in a container
+  # Note: GPU support requires additional configuration
+  #
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   container_name: solo_leveling_ai
+  #   restart: unless-stopped
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ollama_data:/root/.ollama
+  #   networks:
+  #     - solo_leveling_network
+  #   # For NVIDIA GPU support, uncomment:
+  #   # deploy:
+  #   #   resources:
+  #   #     reservations:
+  #   #       devices:
+  #   #         - driver: nvidia
+  #   #           count: all
+  #   #           capabilities: [gpu]
+
+  # ============================================================================
+  # Adminer - Database Management UI (Optional)
+  # ============================================================================
+  adminer:
+    image: adminer:latest
+    container_name: solo_leveling_adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    depends_on:
+      - postgres
+    networks:
+      - solo_leveling_network
+
+volumes:
+  postgres_data:
+    name: solo_leveling_postgres_data
+  # ollama_data:
+  #   name: solo_leveling_ollama_data
+
+networks:
+  solo_leveling_network:
+    name: solo_leveling_network
+    driver: bridge

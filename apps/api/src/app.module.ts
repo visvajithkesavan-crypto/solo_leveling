@@ -6,6 +6,7 @@ import { EngineModule } from './engine/engine.module';
 import { ProgressModule } from './progress/progress.module';
 import { IngestModule } from './ingest/ingest.module';
 import { AiModule } from './ai/ai.module';
+import { AICoachModule } from './ai-coach/ai-coach.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { AiModule } from './ai/ai.module';
     ProgressModule,
     IngestModule,
     AiModule,
+    AICoachModule,
   ],
 })
 export class AppModule {}

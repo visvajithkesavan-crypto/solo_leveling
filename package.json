@@ -16,7 +16,12 @@
     "supabase:start": "cd infra/supabase && supabase start",
     "supabase:stop": "cd infra/supabase && supabase stop",
     "supabase:status": "cd infra/supabase && supabase status",
-    "supabase:migrate": "cd infra/supabase && supabase db reset"
+    "supabase:migrate": "cd infra/supabase && supabase db reset",
+    "db:start": "podman-compose up -d postgres adminer",
+    "db:stop": "podman-compose down",
+    "db:logs": "podman-compose logs -f postgres",
+    "ollama:status": "curl -s http://localhost:11434/api/tags | jq",
+    "setup:ollama": "powershell -ExecutionPolicy Bypass -File ./setup-ollama.ps1"
   },
   "devDependencies": {
     "pg": "^8.16.3"
